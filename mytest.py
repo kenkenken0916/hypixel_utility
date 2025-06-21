@@ -70,7 +70,7 @@ def func(delayhour=4, wait=False):
 
         print("start waiting")
 
-        rep=random.randint(delaytime-3, delaytime+3)
+        rep=random.randint(24, 30)
         for i in range(0,rep):
             time.sleep(600)
             pyautogui.keyDown('w')
