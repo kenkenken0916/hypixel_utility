@@ -37,10 +37,10 @@ def gohome():
 
 
 
-def func(delayhour=4, wait=False):
+def func(delayhour=6, wait=False):
     delaytime= delayhour* 6
     if wait:
-        print("Waiting for", delaytime, "hours")
+        print("Waiting for", delaytime/6, "hours")
         for i in range(0,delaytime):
             time.sleep(600)
             pyautogui.keyDown('w')
@@ -93,7 +93,7 @@ def func(delayhour=4, wait=False):
 
 
 
-def mepu(clean=True)->None:
+def mepu(clean=True):
     t=67
     pyautogui.keyDown('shiftleft')
     time.sleep(.1)
