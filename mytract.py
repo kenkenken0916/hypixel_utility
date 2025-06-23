@@ -28,9 +28,9 @@ def match_template_with_transparency(screen_img, template_img):
         screen_bgr = cv2.cvtColor(np.array(screen, dtype=np.uint8), cv2.COLOR_RGB2BGR)
         template_bgr = cv2.cvtColor(np.array(template[:, :, :3], dtype=np.uint8), cv2.COLOR_RGB2BGR)
 
-        # 保存调试图像
-        cv2.imwrite("debug_screen.png", screen_bgr)
-        cv2.imwrite("debug_template.png", template_bgr)
+        # # 保存调试图像 (已注释)
+        # cv2.imwrite("debug_screen.png", screen_bgr)
+        # cv2.imwrite("debug_template.png", template_bgr)
 
         # 使用 TM_SQDIFF_NORMED 方法（值越小越匹配）
         res = cv2.matchTemplate(screen_bgr, template_bgr, cv2.TM_SQDIFF_NORMED, mask=mask)
@@ -46,23 +46,22 @@ def match_template_with_transparency(screen_img, template_img):
         # 降低阈值，增加调试信息
         if match_val > 0.6:  # 降低阈值到0.6
             h, w = template_bgr.shape[:2]
-            # 在匹配位置画个框
-            cv2.rectangle(screen_bgr, match_loc, (match_loc[0] + w, match_loc[1] + h), (0,255,0), 2)
-            # 在框上标注匹配值
-            cv2.putText(screen_bgr, f"Match: {match_val:.2f}", (match_loc[0], match_loc[1]-10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 2)
-            cv2.imwrite("debug_match.png", screen_bgr)
+            # # 在匹配位置画个框并保存图片 (已注释)
+            # # 在框上标注匹配值 (已注释)
+            # cv2.putText(screen_bgr, f"Match: {match_val:.2f}", (match_loc[0], match_loc[1]-10),
+            #             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 2)
+            # cv2.imwrite("debug_match.png", screen_bgr)
             return match_loc, match_val
         return None, match_val
         
     except Exception as e:
         print(f"错误: {str(e)}")
-        try:
-            # 尝试保存原始截图用于调试
-            screen_debug = np.array(screen_img.convert('RGB'))
-            cv2.imwrite("error_screen.png", cv2.cvtColor(screen_debug, cv2.COLOR_RGB2BGR))
-        except:
-            print("无法保存错误截图")
+        # try:
+        #     # 尝试保存原始截图用于调试
+        #     screen_debug = np.array(screen_img.convert('RGB'))
+        #     cv2.imwrite("error_screen.png", cv2.cvtColor(screen_debug, cv2.COLOR_RGB2BGR))
+        # except:
+        #     print("无法保存错误截图")
         return None, 0.0
 
 # 指定區域（例如左上角 400x300 的範圍）
@@ -106,3 +105,4 @@ def make_decision():
         print("已停止")
 
 make_decision()
+
