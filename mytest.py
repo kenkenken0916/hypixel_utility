@@ -37,7 +37,7 @@ def gohome():
 
 
 
-def func(delayhour=6, wait=False):
+def func(delayhour=0, wait=False):
     delaytime= delayhour* 6
     if wait:
         print("Waiting for", delaytime/6, "hours")

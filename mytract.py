@@ -17,8 +17,8 @@ def match_template_with_transparency(screen_img, template_img):
         template = np.array(template_rgba)
 
         # 打印图片尺寸信息
-        print(f"屏幕截图尺寸: {screen.shape}")
-        print(f"模板图片尺寸: {template.shape}")
+        # print(f"屏幕截图尺寸: {screen.shape}")
+        # print(f"模板图片尺寸: {template.shape}")
 
         # 处理透明通道
         alpha = template[:, :, 3]
@@ -40,11 +40,11 @@ def match_template_with_transparency(screen_img, template_img):
         match_val = 1.0 - min_val  # 转换为相似度分数（1最匹配，0最不匹配）
         match_loc = min_loc
         
-        print(f"匹配值: {match_val}")  # 打印匹配度
-        print(f"匹配位置: {match_loc}")
+        # print(f"匹配值: {match_val}")  # 打印匹配度
+        # print(f"匹配位置: {match_loc}")
         
         # 降低阈值，增加调试信息
-        if match_val > 0.6:  # 降低阈值到0.6
+        if match_val > 0.85:  # 降低阈值到0.6
             h, w = template_bgr.shape[:2]
             # # 在匹配位置画个框并保存图片 (已注释)
             # # 在框上标注匹配值 (已注释)
@@ -65,7 +65,7 @@ def match_template_with_transparency(screen_img, template_img):
         return None, 0.0
 
 # 指定區域（例如左上角 400x300 的範圍）
-search_region = (0, 0, 1000, 800)  # (left, top, width, height)
+search_region = (1400, 100, 519, 800)  # (left, top, width, height)
 
 
 # 載入模板圖
@@ -87,6 +87,11 @@ def search_image(image,image_region):
         print(f"{image.filename} not found")
         return 0
 
+
+#back to list Mouse Position: (x=956, y=643) 
+
+#region Mouse Position: (x=1435, y=166)
+# Mouse Position: (x=1919, y=828)
 
 def make_decision():
     global screenshot, found_at
