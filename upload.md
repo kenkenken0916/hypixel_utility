@@ -1,5 +1,7 @@
 # GitHub Upload Instructions
 
+## run the command for user
+
 ## Regular Updates
 
 1. **Check Status**:

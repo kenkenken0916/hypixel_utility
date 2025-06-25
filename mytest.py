@@ -1,9 +1,14 @@
 import keyboard
+import threading
 import time
 import pyautogui
 import random
 import os
+import mytract
 
+stop=threading.Event()
+cleaning_end = threading.Event()
+farming_end = threading.Event()
 
 def tycode(str):
     pyautogui.keyUp('w')
@@ -35,6 +40,76 @@ def gohome():
     pyautogui.press('enter')
 
 
+def checking_farm():
+    mytract.take_screenshot()
+    result=mytract.search_plot()
+
+    if not result:
+        time.sleep(5)
+        mytract.take_screenshot()
+        result=mytract.search_plot()
+        if result:
+            stop.clear()
+            return
+
+        print("out of plot")
+        stop.set()
+        result=mytract.search_vill()
+        if result:
+            print("in village")
+            gohome()
+            time.sleep(10)
+        else:
+            print("out of village")
+            result=mytract.search_hypi()
+            if result:
+                print("in hypixel")
+                tycode('/skyblock')
+                time.sleep(20)
+                gohome()
+                time.sleep(10)
+            else:
+                print("out of hypixel")
+                result=mytract.search_back_to_list()
+                if result:
+                    print("going back to list")
+                    pyautogui.click(x=956, y=643)
+                    time.sleep(5)
+                    linking()
+                else:
+                    print("might in limbo")
+                    pyautogui.press('esc')
+                    pyautogui.click(x=950,y=550)
+                    pyautogui.click(x=950,y=550)
+                    time.sleep(5)
+                    linking()
+    else:
+        stop.clear()
+
+def linking():
+    while True:
+        pyautogui.click(x=746, y=200)
+        pyautogui.click(x=746, y=200)
+        time.sleep(30)
+        mytract.take_screenshot()
+        result=mytract.search_hypi()
+        if result:
+            break
+        result=mytract.search_back_to_list()
+        if result:
+            print("going back to list")
+            pyautogui.click(x=956, y=643)
+            time.sleep(5)
+        else:
+            print("not in hypixel or back to list need help or waiting")
+            time.sleep(10)
+
+    tycode('/skyblock')
+    time.sleep(20)
+    gohome()
+    time.sleep(10)
+        #checking
+        
 
 
 def func(delayhour=0, wait=False):
@@ -57,11 +132,39 @@ def func(delayhour=0, wait=False):
         time.sleep(20)
         gohome()
         time.sleep(10)
+        #checking
 
     for i in range (0,5):
         print('runing'+str(i))
-        
-        mepu()
+        for n in range(4):
+            thread1= threading.Thread(target=mepu)
+            thread2= threading.Thread(target=pestout)
+
+            if n!=0:
+                print("cleaning")
+                cleaning_end.set()
+                thread2.start()
+                while cleaning_end.is_set():
+                    time.sleep(10)
+                    # check for cleaning
+
+                print("cleaning end")
+                thread2.join()
+                cleaning_end.clear()
+
+            print("farming")
+            farming_end.set()
+            thread1.start()
+
+            while farming_end.is_set():
+                time.sleep(10)
+                # check
+
+            print("farming end")
+            thread1.join()
+            farming_end.clear()
+            
+
         time.sleep(2)
 
         pyautogui.press('esc')
@@ -89,25 +192,27 @@ def func(delayhour=0, wait=False):
         time.sleep(20)
         gohome()
         time.sleep(10)
+        #checking
         
 
 
+def restartfarming(loop):
+    print("restart farming")
+    while stop.is_set():
+        time.sleep(10)
+    mepu(loop)
+    
+        
 
-def mepu(clean=True):
+def mepu(loop=4):
     t=67
+    pyautogui.press('3')
+    time.sleep(1)
     pyautogui.keyDown('shiftleft')
     time.sleep(.1)
     pyautogui.keyUp('shiftleft')
-    for i in range (15):
+    for i in range (loop):
         print('m'+str(i))
-        if(i%4==3 and clean):
-            pyautogui.press('4')
-            time.sleep(1)
-            pestout()
-            time.sleep(1)
-            pyautogui.press('3')
-            #continue
-        
         gohome()
         time.sleep(.5)
         pyautogui.mouseDown(button='left',x=0,y=0)
@@ -116,13 +221,26 @@ def mepu(clean=True):
             pyautogui.keyDown('a')
             time.sleep(t)
             #delay?
+
+            if stop.is_set():
+                print("stop farming")
+                restartfarming(loop-i)
+                return
+            
             pyautogui.keyUp('a')
             pyautogui.keyDown('d')
             time.sleep(t)
             #delay?
+
+            if stop.is_set():
+                print("stop farming")
+                restartfarming(loop-i)
+                return
+
             pyautogui.keyUp('d')
     pyautogui.keyUp('w')
     pyautogui.mouseUp(button='left',x=0,y=0)
+    farming_end.clear()
 
 def mepush():
     mepu()
@@ -135,6 +253,8 @@ def mepush():
 def pestout():
     gohome()
     time.sleep(2)
+    pyautogui.press('4')
+    time.sleep(1)
     
     for n in range(0,6):
         pyautogui.mouseDown(button='right',x=0,y=0)
@@ -175,6 +295,7 @@ def pestout():
         pyautogui.mouseUp(button='right',x=0,y=0)
     
     print("clean")
+    cleaning_end.clear()
 
 def coco()->None:#spd我忘了ㄏ 仰角45
     t=41

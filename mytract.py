@@ -8,6 +8,47 @@ from PIL import Image
 screenshot = None
 found_at = None
 
+hypi=Image.open("hypi.png")
+plot=Image.open("plot.png")
+vill=Image.open("vill.png")
+back_to_list_img=Image.open("back_to_list.png")
+
+# todo plot numbers pest numbers
+
+def take_screenshot(region=None):
+    global screenshot
+    screenshot = pyautogui.screenshot(region=region)
+
+def search_hypi():
+    found_at, confidence = match_template_with_transparency(screenshot, hypi)
+    if found_at:
+        return True
+    else:
+        return False
+    
+def search_plot():
+    found_at, confidence = match_template_with_transparency(screenshot, plot)
+    if found_at:
+        return True
+    else:
+        return False
+
+def search_vill():
+    found_at, confidence = match_template_with_transparency(screenshot, vill)
+    if found_at:
+        return True
+    else:
+        return False
+    
+def search_back_to_list():
+    found_at, confidence = match_template_with_transparency(screenshot, back_to_list_img)
+    if found_at:
+        return True
+    else:
+        return False
+
+
+
 # 子圖比對 + 支援透明遮罩
 def match_template_with_transparency(screen_img, template_img):
     try:
@@ -69,9 +110,7 @@ search_region = (1400, 100, 519, 800)  # (left, top, width, height)
 
 
 # 載入模板圖
-hypi=Image.open("hypi.png")
-plot=Image.open("plot.png")
-vill=Image.open("vill.png")
+
 
 def search_image(image,image_region):
     global screenshot, found_at
@@ -101,6 +140,7 @@ def make_decision():
             search_htpi= search_image(hypi, search_region)
             search_plot= search_image(plot, search_region)
             search_vill= search_image(vill, search_region)
+            search_back_to_list= search_image(back_to_list_img, search_region)
 
 
                 
@@ -109,5 +149,5 @@ def make_decision():
     except KeyboardInterrupt:
         print("已停止")
 
-make_decision()
+# make_decision()
 
