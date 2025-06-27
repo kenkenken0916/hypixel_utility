@@ -5,10 +5,16 @@ import pyautogui
 import random
 import os
 import mytract
+from datetime import datetime
+import message
+
+def get_time():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 stop=threading.Event()
 cleaning_end = threading.Event()
 farming_end = threading.Event()
+error_count=0
 
 def tycode(str):
     pyautogui.keyUp('w')
@@ -16,6 +22,7 @@ def tycode(str):
     pyautogui.keyUp('s')
     pyautogui.keyUp('d')
     pyautogui.keyUp('t')
+    pyautogui.keyUp('shiftleft')
     pyautogui.mouseUp(button='left',x=0,y=0)
     time.sleep(.5)
     pyautogui.press('t')
@@ -52,33 +59,34 @@ def checking_farm():
             stop.clear()
             return
 
-        print("out of plot")
+        print(f"[{get_time()}] out of plot")
         stop.set()
         result=mytract.search_vill()
         if result:
-            print("in village")
+            print(f"[{get_time()}] in village")
             gohome()
             time.sleep(10)
         else:
-            print("out of village")
+            print(f"[{get_time()}] out of village")
             result=mytract.search_hypi()
             if result:
-                print("in hypixel")
+                print(f"[{get_time()}] in hypixel")
                 tycode('/skyblock')
                 time.sleep(20)
                 gohome()
                 time.sleep(10)
             else:
-                print("out of hypixel")
+                print(f"[{get_time()}] out of hypixel")
                 result=mytract.search_back_to_list()
                 if result:
-                    print("going back to list")
+                    print(f"[{get_time()}] going back to list")
                     pyautogui.click(x=956, y=643)
                     time.sleep(5)
                     linking()
                 else:
                     print("might in limbo")
                     pyautogui.press('esc')
+                    pyautogui.click(x=950,y=550)
                     pyautogui.click(x=950,y=550)
                     pyautogui.click(x=950,y=550)
                     time.sleep(5)
@@ -101,7 +109,18 @@ def linking():
             pyautogui.click(x=956, y=643)
             time.sleep(5)
         else:
-            print("not in hypixel or back to list need help or waiting")
+            global error_count
+            error_count+=1
+            print(f"[{get_time()}] not in hypixel or back to list need help or waiting")
+            message.send_discord_message()
+            if error_count>5:
+                print(f"[{get_time()}] too many errors, stopping")
+                pyautogui.press('esc')
+                pyautogui.click(x=950,y=550)
+                pyautogui.click(x=950,y=550)
+                pyautogui.click(x=950,y=550)
+                os.system("shutdown -h now")
+                return
             time.sleep(10)
 
     tycode('/skyblock')
@@ -135,32 +154,33 @@ def func(delayhour=0, wait=False):
         #checking
 
     for i in range (0,5):
+        error_count=0
         print('runing'+str(i))
         for n in range(4):
             thread1= threading.Thread(target=mepu)
             thread2= threading.Thread(target=pestout)
 
             if n!=0:
-                print("cleaning")
+                print(f"[{get_time()}] cleaning")
                 cleaning_end.set()
                 thread2.start()
                 while cleaning_end.is_set():
                     time.sleep(10)
-                    # check for cleaning
+                    checking_farm()
 
-                print("cleaning end")
+                print(f"[{get_time()}] cleaning end")
                 thread2.join()
                 cleaning_end.clear()
 
-            print("farming")
+            print(f"[{get_time()}] farming")
             farming_end.set()
             thread1.start()
 
             while farming_end.is_set():
                 time.sleep(10)
-                # check
+                checking_farm()
 
-            print("farming end")
+            print(f"[{get_time()}] farming end")
             thread1.join()
             farming_end.clear()
             
@@ -170,8 +190,9 @@ def func(delayhour=0, wait=False):
         pyautogui.press('esc')
         pyautogui.click(x=950,y=550)
         pyautogui.click(x=950,y=550)
+        pyautogui.click(x=950,y=550)
 
-        print("start waiting")
+        print(f"[{get_time()}] start waiting")
 
         rep=random.randint(24, 30)
         for i in range(0,rep):
@@ -183,7 +204,7 @@ def func(delayhour=0, wait=False):
             time.sleep(.5)
             pyautogui.keyUp('s')
 
-        print("going back to game")
+        print(f"[{get_time()}] going back to game")
         
         pyautogui.click(x=746, y=200)
         pyautogui.click(x=746, y=200)
@@ -192,19 +213,19 @@ def func(delayhour=0, wait=False):
         time.sleep(20)
         gohome()
         time.sleep(10)
-        #checking
+        
         
 
 
 def restartfarming(loop):
-    print("restart farming")
+    print(f"[{get_time()}] restart farming")
     while stop.is_set():
         time.sleep(10)
     mepu(loop)
     
         
 
-def mepu(loop=4):
+def mepu(loop=3):
     t=67
     pyautogui.press('3')
     time.sleep(1)
@@ -223,7 +244,7 @@ def mepu(loop=4):
             #delay?
 
             if stop.is_set():
-                print("stop farming")
+                print(f"[{get_time()}] stop farming")
                 restartfarming(loop-i)
                 return
             
@@ -233,7 +254,7 @@ def mepu(loop=4):
             #delay?
 
             if stop.is_set():
-                print("stop farming")
+                print(f"[{get_time()}] stop farming")
                 restartfarming(loop-i)
                 return
 
@@ -246,6 +267,7 @@ def mepush():
     mepu()
     time.sleep(2)
     pyautogui.press('esc')
+    pyautogui.click(x=950,y=550)
     pyautogui.click(x=950,y=550)
     pyautogui.click(x=950,y=550)
     os.system("shutdown -h now")
@@ -271,6 +293,11 @@ def pestout():
 
         pyautogui.mouseUp(button='right',x=0,y=0)
 
+        if stop.is_set():
+            print(f"[{get_time()}] stop cleaning")
+            cleaning_end.clear()
+            return
+
         pyautogui.keyDown('w')
         time.sleep(1)
         pyautogui.keyUp('w')
@@ -293,8 +320,13 @@ def pestout():
         pyautogui.keyUp('w')
 
         pyautogui.mouseUp(button='right',x=0,y=0)
+
+        if stop.is_set():
+            print(f"[{get_time()}] stop cleaning")
+            cleaning_end.clear()
+            return
     
-    print("clean")
+    print(f"[{get_time()}] clean")
     cleaning_end.clear()
 
 def coco()->None:#spd我忘了ㄏ 仰角45

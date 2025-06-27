@@ -50,10 +50,16 @@ def search_back_to_list():
 
 
 # 子圖比對 + 支援透明遮罩
-def match_template_with_transparency(screen_img, template_img):
+def match_template_with_transparency(screen_img, template_img, region=None):
     try:
         # 确保图片格式正确
         screen = np.array(screen_img.convert('RGB'))
+        
+        # 如果指定了区域，裁剪图片
+        if region is not None:
+            x, y, w, h = region
+            screen = screen[y:y+h, x:x+w]
+        
         template_rgba = template_img.convert('RGBA')
         template = np.array(template_rgba)
 
@@ -92,6 +98,9 @@ def match_template_with_transparency(screen_img, template_img):
             # cv2.putText(screen_bgr, f"Match: {match_val:.2f}", (match_loc[0], match_loc[1]-10),
             #             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 2)
             # cv2.imwrite("debug_match.png", screen_bgr)
+            # 如果使用了区域，需要调整返回的坐标
+            if region is not None:
+                match_loc = (match_loc[0] + region[0], match_loc[1] + region[1])
             return match_loc, match_val
         return None, match_val
         
