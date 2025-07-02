@@ -2,6 +2,12 @@ import pyautogui
 import keyboard
 
 import time
+from PIL import ImageGrab
+
+
+
+
+
 
 # 設定初始移動距離
 distance_a = 1
@@ -43,6 +49,15 @@ def bzone():
     pyautogui.moveTo(954, 358)
     pyautogui.click()
 
+
+
+def get_mouse_pos_and_color():
+    x, y = pyautogui.position()  # 取得滑鼠位置
+    screen = ImageGrab.grab()   # 擷取整個螢幕
+    color = screen.getpixel((x, y))  # 取得該位置顏色 (R,G,B)
+    print(f"滑鼠位置: ({x}, {y})，顏色: RGB{color}")
+
+    
 # 綁定快捷鍵
 keyboard.add_hotkey('m+up', lambda: move_mouse(0, -current_distance))
 keyboard.add_hotkey('m+down', lambda: move_mouse(0, current_distance))
@@ -51,6 +66,7 @@ keyboard.add_hotkey('m+right', lambda: move_mouse(current_distance, 0))
 keyboard.add_hotkey('m+x', switch_distance)
 keyboard.add_hotkey('m+h', print_position)
 keyboard.add_hotkey('m+j', bzone)
+keyboard.add_hotkey('m+k', get_mouse_pos_and_color)
 
 print("Hotkeys activated! Press ESC to exit.")
 keyboard.wait('esc')

@@ -6,7 +6,9 @@ import random
 import os
 import mytract
 from datetime import datetime
-import message
+import freez
+# import discord_webhook
+# import message
 
 def get_time():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -112,7 +114,7 @@ def linking():
             global error_count
             error_count+=1
             print(f"[{get_time()}] not in hypixel or back to list need help or waiting")
-            message.send_discord_message()
+            # message.send_discord_message()
             if error_count>5:
                 print(f"[{get_time()}] too many errors, stopping")
                 pyautogui.press('esc')
@@ -129,13 +131,9 @@ def linking():
     time.sleep(10)
         #checking
         
-
-
-def func(delayhour=0, wait=False):
-    delaytime= delayhour* 6
-    if wait:
-        print("Waiting for", delaytime/6, "hours")
-        for i in range(0,delaytime):
+def freez_and_wait(loop):#10min for 1 loop
+    freez.freeze(freez.find_minecraft_pid())
+    for i in range(0,loop):
             time.sleep(600)
             pyautogui.keyDown('w')
             time.sleep(.5)
@@ -143,6 +141,14 @@ def func(delayhour=0, wait=False):
             pyautogui.keyDown('s')
             time.sleep(.5)
             pyautogui.keyUp('s')
+    freez.unfreeze(freez.find_minecraft_pid())
+
+
+def func(delayhour=3, wait=False):
+    delaytime = delayhour* 6
+    if wait:
+        print(f"Waiting for {delayhour} hours")
+        freez_and_wait(delaytime)
 
         pyautogui.click(x=746, y=200)
         pyautogui.click(x=746, y=200)
@@ -154,6 +160,7 @@ def func(delayhour=0, wait=False):
         #checking
 
     for i in range (0,5):
+        checking_farm()
         error_count=0
         print('runing'+str(i))
         for n in range(4):
@@ -195,14 +202,7 @@ def func(delayhour=0, wait=False):
         print(f"[{get_time()}] start waiting")
 
         rep=random.randint(24, 30)
-        for i in range(0,rep):
-            time.sleep(600)
-            pyautogui.keyDown('w')
-            time.sleep(.5)
-            pyautogui.keyUp('w')
-            pyautogui.keyDown('s')
-            time.sleep(.5)
-            pyautogui.keyUp('s')
+        freez_and_wait(rep)
 
         print(f"[{get_time()}] going back to game")
         
