@@ -35,7 +35,7 @@ def search_plot():
 
 def search_vill():
     found_at, confidence = match_template_with_transparency(screenshot, vill)
-    if found_at:
+    if found_at and confidence > 0.9:  # Adjust confidence threshold as needed
         return True
     else:
         return False
@@ -86,12 +86,12 @@ def match_template_with_transparency(screen_img, template_img, region=None):
         # 使用 TM_SQDIFF_NORMED 时，最小值才是最佳匹配
         match_val = 1.0 - min_val  # 转换为相似度分数（1最匹配，0最不匹配）
         match_loc = min_loc
-
+        
         # print(f"匹配值: {match_val}")  # 打印匹配度
         # print(f"匹配位置: {match_loc}")
         
         # 降低阈值，增加调试信息
-        if match_val > 0.99:  # 降低阈值到0.6
+        if match_val >= 0.9:  # 降低阈值到0.6
             h, w = template_bgr.shape[:2]
             # # 在匹配位置画个框并保存图片 (已注释)
             # # 在框上标注匹配值 (已注释)
@@ -153,11 +153,10 @@ def make_decision():
 
 
                 
-            time.sleep(3)
+            time.sleep(10)
 
     except KeyboardInterrupt:
         print("已停止")
-
 
 # make_decision()
 

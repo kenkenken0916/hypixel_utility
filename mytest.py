@@ -144,10 +144,9 @@ def freez_and_wait(loop):#10min for 1 loop
     freez.unfreeze(freez.find_minecraft_pid())
 
 
-def func(delayhour=3, wait=False):
+def func(delayhour=4, wait=False):
     delaytime = delayhour* 6
     if wait:
-        print(f"Waiting for {delayhour} hours")
         freez_and_wait(delaytime)
 
         pyautogui.click(x=746, y=200)
