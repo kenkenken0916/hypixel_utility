@@ -328,6 +328,37 @@ def pestout():
     print(f"[{get_time()}] clean")
     cleaning_end.clear()
 
+
+'''
+def new_pestout():
+    gohome()
+    time.sleep(2)
+    pyautogui.press('4')
+    time.sleep(1)
+    while not stop.is_set():
+        tycode('/desk')
+        #todo take picture and check is in desk menu
+    
+        if result is True:
+            break
+    
+    #todo go to plot map
+
+    #todo hover on everyplot and screen shot find pest amount
+    # plot_status is a 3*5 array store pestamount
+    plot_status = [[0 for _ in range(5)] for _ in range(3)]
+    
+    #todo start from bottom layer use path goto entry and do small pestout
+    #then second layer some has faster way dont walt from the start
+    # if third layer has pest keep doinkg layer 3 and dont go to start and go there again
+    #always go up left plot if has pest
+    #then is the left layer 3
+
+
+
+'''
+
+
 def coco()->None:#spd我忘了ㄏ 仰角45
     t=41
     for i in range(0,1):
