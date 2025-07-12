@@ -35,7 +35,7 @@ def search_plot():
 
 def search_vill():
     found_at, confidence = match_template_with_transparency(screenshot, vill)
-    if found_at and confidence > 0.9:  # Adjust confidence threshold as needed
+    if found_at and confidence > 0.95:  # Adjust confidence threshold as needed
         return True
     else:
         return False

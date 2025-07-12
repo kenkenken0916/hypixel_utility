@@ -144,7 +144,7 @@ def freez_and_wait(loop):#10min for 1 loop
     freez.unfreeze(freez.find_minecraft_pid())
 
 
-def func(delayhour=4, wait=False):
+def func(delayhour=3, wait=False):
     delaytime = delayhour* 6
     if wait:
         freez_and_wait(delaytime)
@@ -225,6 +225,7 @@ def restartfarming(loop):
         
 
 def mepu(loop=3):
+    pyautogui.mouseUp(button='left',x=0,y=0)
     t=67
     pyautogui.press('3')
     time.sleep(1)
