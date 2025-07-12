@@ -8,10 +8,10 @@ from PIL import Image
 screenshot = None
 found_at = None
 
-hypi=Image.open("hypi.png")
-plot=Image.open("plot.png")
-vill=Image.open("vill.png")
-back_to_list_img=Image.open("back_to_list.png")
+hypi=Image.open("./pic/whereami/hypi.png")
+plot=Image.open("./pic/whereami/garden.png")
+vill=Image.open("./pic/whereami/vill.png")
+back_to_list_img=Image.open("./pic/whereami/back_to_list.png")
 
 # todo plot numbers pest numbers
 
@@ -115,7 +115,7 @@ def match_template_with_transparency(screen_img, template_img, region=None):
         return None, 0.0
 
 # 指定區域（例如左上角 400x300 的範圍）
-search_region = (1400, 100, 519, 800)  # (left, top, width, height)
+search_region = (1400, 100, 519, 400)  # (left, top, width, height)
 
 
 # 載入模板圖
