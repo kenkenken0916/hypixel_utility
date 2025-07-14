@@ -10,8 +10,6 @@ import numpy as np
 import cv2
 import mytract
 import freez
-import numMatch
-import re
 # import discord_webhook
 # import message
 
@@ -22,7 +20,6 @@ stop=threading.Event()
 cleaning_end = threading.Event()
 farming_end = threading.Event()
 error_count=0
-nopest=False
 
 def color_check(r,g,b):
     bgr_color = np.array([[[b, g, r]]], dtype=np.uint8)
@@ -213,7 +210,7 @@ def func(delayhour=3, wait=False):
             thread1= threading.Thread(target=mepu)
             thread2= threading.Thread(target=pestout)
 
-            if n!=0 and not nopest:
+            if n!=0:
                 print(f"[{get_time()}] cleaning")
                 cleaning_end.set()
                 thread2.start()
@@ -327,6 +324,14 @@ def mepu(loop=3):
     pyautogui.mouseUp(button='left',x=0,y=0)
     farming_end.clear()
 
+def mepush():
+    mepu()
+    time.sleep(2)
+    pyautogui.press('esc')
+    pyautogui.click(x=950,y=550)
+    pyautogui.click(x=950,y=550)
+    pyautogui.click(x=950,y=550)
+    os.system("shutdown -h now")
 
 def pestout():
     gohome()
@@ -382,33 +387,145 @@ def pestout():
             cleaning_end.clear()
             return
     
-    pestnum=numMatch.pestingarden()
-    if pestnum>5:
-        print(f"[{get_time()}] pest number {pestnum} is too high, stopping")
-        nopest=True
-    
     print(f"[{get_time()}] clean")
     cleaning_end.clear()
 
 
-
+'''
 def new_pestout():
     gohome()
     time.sleep(2)
     pyautogui.press('4')
     time.sleep(1)
-    if(lookup()):
-        print(f"[{get_time()}] cleaning")
-    else:
-        print(f"[{get_time()}] not in desk or no plot error")
-        return
+    while not stop.is_set():
+        tycode('/desk')
+        #todo take picture and check is in desk menu
     
+        if result is True:
+            break
+    
+    #todo go to plot map
+
+    #todo hover on everyplot and screen shot find pest amount
+    # plot_status is a 3*5 array store pestamount
+    plot_status = [[0 for _ in range(5)] for _ in range(3)]
     
     #todo start from bottom layer use path goto entry and do small pestout
     #then second layer some has faster way dont walt from the start
     # if third layer has pest keep doinkg layer 3 and dont go to start and go there again
     #always go up left plot if has pest
- 
+    #then is the left layer 3
+
+
+
+'''
+#use comm /desk
+#while not exist picture_dirt
+#   check if exist picture_dirt
+#click on dirt
+#go_list: bool[3][5]
+#for15
+#   hover on 15 plot pic
+#   find pic is_pest
+#   if yes append to list
+
+def coco()->None:#spd我忘了ㄏ 仰角45
+    t=41
+    for i in range(0,1):
+        gohome()
+        time.sleep(.5)
+        pyautogui.mouseDown(button='left',x=0,y=0)
+        for n in range(0,10):
+            pyautogui.keyDown('s')
+            pyautogui.keyDown('a')
+            time.sleep(t)
+            pyautogui.keyUp('a')
+            pyautogui.keyUp('s')
+            pyautogui.keyDown('d')
+            pyautogui.keyDown('w')
+            time.sleep(t+0.5)
+            pyautogui.keyUp('w')
+            pyautogui.keyUp('d')
+    pyautogui.mouseUp(button='left',x=0,y=0)
+    #winsound.Beep(1000,1000)
+
+def sugar()->None:#spd328 仰角~0
+    for o in range(0,5):
+        gohome()
+        time.sleep(.5)
+        pyautogui.mouseDown(button='left',x=0,y=0)
+        for n in range(0,15):
+            pyautogui.keyDown('s')
+            time.sleep(19.1)
+            pyautogui.keyUp('s')
+            pyautogui.keyDown('d')
+            time.sleep(19.1)
+            pyautogui.keyUp('d')
+        pyautogui.keyDown('s')
+        time.sleep(19.1)
+        pyautogui.keyUp('s')
+    pyautogui.mouseUp(button='left',x=0,y=0)
+
+def cati()->None:#spd500 仰角~0
+    t=18.5
+    for i in range(0,5):
+        gohome()
+        time.sleep(.5)
+        pyautogui.mouseDown(button='left',x=0,y=0)
+        for n in range(0,13):
+            pyautogui.keyDown('d')
+            time.sleep(t)
+            pyautogui.keyUp('d')
+            pyautogui.keyDown('s')
+            time.sleep(0.15)
+            pyautogui.keyUp('s')
+            pyautogui.keyDown('a')
+            time.sleep(t)
+            pyautogui.keyUp('a')
+            pyautogui.keyDown('s')
+            time.sleep(0.15)
+            pyautogui.keyUp('s') 
+        pyautogui.mouseUp(button='left',x=0,y=0)
+
+
+def mush()->None:#spd232 仰角~5.5
+    for o in range(0,20):
+        gohome()
+        time.sleep(.5)
+        pyautogui.mouseDown(button='left',x=0,y=0)
+        for n in range (0,3):
+            pyautogui.keyDown('a')
+            time.sleep(51.5)#85.3
+            pyautogui.keyDown('s')
+            time.sleep(0.7)
+            pyautogui.keyUp('a')
+            pyautogui.keyDown('d')
+            time.sleep(56)#92.5
+            pyautogui.keyUp('d')
+            pyautogui.keyUp('s')
+        pyautogui.mouseUp(button='left',x=0,y=0)
+    #winsound.Beep(1000,1000)
+
+def fino():#spd300
+    t=89
+    pyautogui.keyDown('shiftleft')
+    time.sleep(.1)
+    pyautogui.keyUp('shiftleft')
+    for i in range (0,8):
+        gohome()
+        time.sleep(.5)
+        pyautogui.mouseDown(button='left',x=0,y=0)
+        pyautogui.keyDown('w')
+        for n in range(0,4):
+            pyautogui.keyDown('d')
+            time.sleep(t)
+            pyautogui.keyUp('d')
+            pyautogui.keyDown('a')
+            time.sleep(t)
+            pyautogui.keyUp('a')
+    pyautogui.keyUp('w')
+    pyautogui.mouseUp(button='left',x=0,y=0)
+
 
 
 # Set up the hotkeys

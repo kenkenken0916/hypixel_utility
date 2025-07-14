@@ -3,6 +3,7 @@ import numpy as np
 import pyautogui
 import os
 import time
+import re
 
 # ==== Template 載入 ====
 def load_templates(folder):
@@ -75,16 +76,21 @@ def which_plot():
         return None, 0.0, None
 
 pic_garden=cv2.imread("./pic/whereami/garden.png")
+pic_redgarden=cv2.imread("./pic/whereami/redgarden.png")
 
-def pestingarden():
+def pestingarden() -> int:
     img = capture_region(1280, 0, 640, 800)
-    if img is None or pic_garden is None:
+    if img is None or pic_garden is None or pic_redgarden is None:
         print("無法載入圖片")
         return -2
         
     
     score, loc = match_single_template(img, pic_garden)
-    
+    score2, loc2 = match_single_template(img, pic_redgarden)
+    if(score2 > score):
+        score = score2
+        loc = loc2
+
     if score > 0.8 and loc is not None:  # 確保 loc 不是 None
         try:
             # 確保座標不會超出圖片範圍
@@ -98,7 +104,11 @@ def pestingarden():
             pestlabel, pestscore,pestloc=match_template(new_img, templates_1to8)
             if pestlabel is not None and pestscore > 0.8:
                 print(f"害蟲數字匹配結果：類別：{pestlabel}，信心值：{pestscore:.2f}，位置：{pestloc}")
-                return pestlabel
+                match = re.search(r'\d+',pestlabel)
+                number=-1
+                if match:
+                    number = int(match.group())
+                return number
             else:
                 print("未找到害蟲數字")
                 return -1
@@ -110,6 +120,43 @@ def pestingarden():
             return -3
     else:
         print("未找到花園 or no pest")
+        return -1
+    
+
+def pestinplot():
+    img = capture_region(1280, 0, 640, 800)
+    if img is None:
+        print("無法載入圖片")
+        return -2
+        
+    
+    lab, score, loc = match_template(img, templates_custom12)
+
+    if score > 0.8 and loc is not None:  # 確保 loc 不是 None
+        try:
+            # 確保座標不會超出圖片範圍
+            y_start = max(0, loc[1]-1)  # 不能小於 0
+            y_end = min(800, loc[1]+30)  # 不能超過圖片高度
+            x_start = loc[0]
+            x_end=640  # 不能超過圖片寬度
+            
+            # 裁切圖片
+            new_img = img[y_start:y_end, x_start:x_end]
+            pestlabel, pestscore,pestloc=match_template(new_img, templates_1to8)
+            if pestlabel is not None and pestscore > 0.8:
+                print(f"害蟲數字匹配結果：類別：{pestlabel}，信心值：{pestscore:.2f}，位置：{pestloc}")
+                return pestlabel,lab
+            else:
+                print("未找到害蟲數字")
+                return -1
+            
+            
+            
+        except Exception as e:
+            print(f"裁切圖片時發生錯誤：{e}")
+            return -3
+    else:
+        print("未找到plot")
         return -1
 
 
