@@ -1,11 +1,14 @@
 import keyboard
 import threading
+import math
 import time
 import pyautogui
 import random
 import os
-import mytract
 from datetime import datetime
+import numpy as np
+import cv2
+import mytract
 import freez
 # import discord_webhook
 # import message
@@ -17,6 +20,17 @@ stop=threading.Event()
 cleaning_end = threading.Event()
 farming_end = threading.Event()
 error_count=0
+
+def color_check(r,g,b):
+    bgr_color = np.array([[[b, g, r]]], dtype=np.uint8)
+    hsv_color = cv2.cvtColor(bgr_color, cv2.COLOR_BGR2HSV)[0][0]
+    # 判斷是否為深紅色
+    h, s, v = hsv_color
+    if(((0 <= h <= 10) or (170 <= h <= 180)) and
+        s >= 100 and
+        v <= 150):
+        return True
+    return False
 
 def tycode(str):
     pyautogui.keyUp('w')
@@ -79,10 +93,13 @@ def checking_farm():
                 time.sleep(10)
             else:
                 print(f"[{get_time()}] out of hypixel")
-                result=mytract.search_back_to_list()
+                found=(0,0)
+                result,found=mytract.search_back_to_list()
                 if result:
                     print(f"[{get_time()}] going back to list")
+                    x,y=found
                     pyautogui.click(x=956, y=643)
+                    pyautogui.click(x=x, y=y)
                     time.sleep(5)
                     linking()
                 else:
@@ -133,6 +150,7 @@ def linking():
         
 def freez_and_wait(loop):#10min for 1 loop
     freez.freeze(freez.find_minecraft_pid())
+    print(f'sleeping for {loop/6} hours')
     for i in range(0,loop):
             time.sleep(600)
             pyautogui.keyDown('w')
@@ -242,23 +260,40 @@ def mepu(loop=3):
             pyautogui.keyDown('a')
             time.sleep(t)
             #delay?
-
-            if stop.is_set():
-                print(f"[{get_time()}] stop farming")
-                restartfarming(loop-i)
-                return
+            
+            for p in range(12):
+                if stop.is_set():
+                    pyautogui.keyUp('a')
+                    print(f"[{get_time()}] stop farming")
+                    restartfarming(loop-i)
+                    return
+                r,g,b=pyautogui.pixel(11, 766)
+                if color_check(r,g,b):
+                    break
+                r,g,b=pyautogui.pixel(291,947)
+                if color_check(r,g,b):
+                    break
+                
+                time.sleep(5)
             
             pyautogui.keyUp('a')
             pyautogui.keyDown('d')
             time.sleep(t)
             #delay?
 
-            if stop.is_set():
-                print(f"[{get_time()}] stop farming")
-                restartfarming(loop-i)
-                return
-
+            for p in range(12):
+                if stop.is_set():
+                    pyautogui.keyUp('a')
+                    print(f"[{get_time()}] stop farming")
+                    restartfarming(loop-i)
+                    return
+                r,g,b=pyautogui.pixel(1909, 766)
+                if color_check(r,g,b) or n==5:
+                    break
+                time.sleep(5)
+            
             pyautogui.keyUp('d')
+
     pyautogui.keyUp('w')
     pyautogui.mouseUp(button='left',x=0,y=0)
     farming_end.clear()

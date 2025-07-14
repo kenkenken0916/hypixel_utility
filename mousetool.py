@@ -57,7 +57,19 @@ def get_mouse_pos_and_color():
     color = screen.getpixel((x, y))  # 取得該位置顏色 (R,G,B)
     print(f"滑鼠位置: ({x}, {y})，顏色: RGB{color}")
 
+def getcolor():
+    # r,g,b = pyautogui.pixel(19, 705)  # 取得指定位置顏色 (R,G,B)
+    # # print(f"指定位置顏色: RGB{leftcolor}")
+    # if (r-79)*(r-79)+(g-79)*(g-79)+(b-79)*(b-79)<1000:
+    #         print("leftget")
     
+    # print(f"right顏色: RGB{r,g,b}") #54, 23, 17
+    r ,g, b= pyautogui.pixel(1909, 766)  # 取得指定位置顏色 (R,G,B)
+    # print(f"指定位置顏色: RGB{rightcolor}")
+    if r>45 and g<45:
+            print("rightget")
+    print(f"左側顏色: RGB{r,g,b}")
+
 # 綁定快捷鍵
 keyboard.add_hotkey('m+up', lambda: move_mouse(0, -current_distance))
 keyboard.add_hotkey('m+down', lambda: move_mouse(0, current_distance))
@@ -67,6 +79,7 @@ keyboard.add_hotkey('m+x', switch_distance)
 keyboard.add_hotkey('m+h', print_position)
 keyboard.add_hotkey('m+j', bzone)
 keyboard.add_hotkey('m+k', get_mouse_pos_and_color)
+keyboard.add_hotkey('m+n', getcolor)
 
 print("Hotkeys activated! Press ESC to exit.")
 keyboard.wait('esc')

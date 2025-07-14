@@ -9,7 +9,7 @@ screenshot = None
 found_at = None
 
 hypi=Image.open("./pic/whereami/hypi.png")
-plot=Image.open("./pic/whereami/garden.png")
+plot=Image.open("./pic/whereami/plot.png")
 vill=Image.open("./pic/whereami/vill.png")
 back_to_list_img=Image.open("./pic/whereami/back_to_list.png")
 
@@ -43,9 +43,9 @@ def search_vill():
 def search_back_to_list():
     found_at, confidence = match_template_with_transparency(screenshot, back_to_list_img)
     if found_at:
-        return True
+        return True, found_at
     else:
-        return False
+        return False,(0,0)
 
 
 
@@ -115,7 +115,7 @@ def match_template_with_transparency(screen_img, template_img, region=None):
         return None, 0.0
 
 # 指定區域（例如左上角 400x300 的範圍）
-search_region = (1400, 100, 519, 400)  # (left, top, width, height)
+search_region = (1280, 0, 640, 1080)  # (left, top, width, height)
 
 
 # 載入模板圖
@@ -143,15 +143,20 @@ def search_image(image,image_region):
 
 def make_decision():
     global screenshot, found_at
+
     try:
         while True:
             screenshot = pyautogui.screenshot(region=search_region)
-            search_htpi= search_image(hypi, search_region)
-            search_plot= search_image(plot, search_region)
-            search_vill= search_image(vill, search_region)
-            search_back_to_list= search_image(back_to_list_img, search_region)
 
-
+            if hypi is not None:
+                if search_image(hypi, search_region):
+                    print("Hypixel found, proceeding to plot search.")
+            if plot is not None:
+                if search_image(plot, search_region):
+                    print("Plot found, proceeding to village search.")
+            if vill is not None:
+                if search_image(vill, search_region):
+                    print("Village found, proceeding to back to list search.")
                 
             time.sleep(10)
 

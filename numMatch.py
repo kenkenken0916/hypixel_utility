@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import pyautogui
 import os
+import time
 
 # ==== Template 載入 ====
 def load_templates(folder):
@@ -55,11 +56,7 @@ def match_single_template(input_img, template):
     res = cv2.matchTemplate(input_img, template, cv2.TM_CCOEFF_NORMED)
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
     
-    # 計算匹配區域的中心點
-    w, h = template.shape[1], template.shape[0]
-    center_x = max_loc[0] + w//2
-    center_y = max_loc[1] + h//2
-    best_location = (center_x, center_y)
+    best_location = max_loc
     
     return max_val, best_location  # 返回最高匹配分數和中心點位置
 
@@ -68,7 +65,7 @@ templates_custom12 = load_templates("./pic/plotnum")
 
 def which_plot():
     # 指定區域（例如左上角 400x300 的範圍）
-    img=capture_region(1400, 100, 519, 400)
+    img=capture_region(1280, 0, 640, 800)
     plotlabel, plotscore, plotloc= match_template(img, templates_custom12)
     if plotlabel is not None and plotscore > 0.8:
         print(f"地塊編號匹配結果：類別：{plotlabel}，信心值：{plotscore:.2f}，位置：{plotloc}")
@@ -80,21 +77,21 @@ def which_plot():
 pic_garden=cv2.imread("./pic/whereami/garden.png")
 
 def pestingarden():
-    img = capture_region(1400, 100, 519, 400)
-    
+    img = capture_region(1280, 0, 640, 800)
     if img is None or pic_garden is None:
         print("無法載入圖片")
         return -2
         
+    
     score, loc = match_single_template(img, pic_garden)
     
     if score > 0.8 and loc is not None:  # 確保 loc 不是 None
         try:
             # 確保座標不會超出圖片範圍
             y_start = max(0, loc[1]-1)  # 不能小於 0
-            y_end = min(img.shape[0], loc[1]+30)  # 不能超過圖片高度
+            y_end = min(800, loc[1]+30)  # 不能超過圖片高度
             x_start = loc[0]
-            x_end = min(img.shape[1], 1920)  # 不能超過圖片寬度
+            x_end=640  # 不能超過圖片寬度
             
             # 裁切圖片
             new_img = img[y_start:y_end, x_start:x_end]
@@ -102,69 +99,78 @@ def pestingarden():
             if pestlabel is not None and pestscore > 0.8:
                 print(f"害蟲數字匹配結果：類別：{pestlabel}，信心值：{pestscore:.2f}，位置：{pestloc}")
                 return pestlabel
+            else:
+                print("未找到害蟲數字")
+                return -1
+            
+            
             
         except Exception as e:
             print(f"裁切圖片時發生錯誤：{e}")
             return -3
     else:
-        print("未找到花園")
+        print("未找到花園 or no pest")
         return -1
 
 
 
 # ==== 主程式 ====
 if __name__ == "__main__":
-    # 範例：擷取畫面
-    x, y, w, h = 960, 0, 960, 1080
-    img = capture_region(x, y, w, h)
+    time.sleep(10)  # 等待2秒以便準備截圖
 
-    print("=== 測試多模板匹配 ===")
-    # 載入模板（兩組）
+    
+    # # 範例：擷取畫面
+    # x, y, w, h = 960, 0, 960, 1080
+    # img = capture_region(x, y, w, h)
 
-    # 多模板比對
-    label1, score1, loc1 = match_template(img, templates_1to8)
-    label2, score2, loc2 = match_template(img, templates_custom12)
+    pestingarden()
+    # print("=== 測試多模板匹配 ===")
+    # # 載入模板（兩組）
 
-    # 判斷結果
-    print(f"害蟲數字匹配結果：類別：{label1}，信心值：{score1:.2f}，位置：{loc1}")
-    print(f"地塊編號匹配結果：類別：{label2}，信心值：{score2:.2f}，位置：{loc2}")
+    # # 多模板比對
+    # label1, score1, loc1 = match_template(img, templates_1to8)
+    # label2, score2, loc2 = match_template(img, templates_custom12)
 
-    # 在圖片上標記找到的位置（綠色是害蟲數字，藍色是地塊編號）
-    if loc1 is not None and score1 > 0.7:
-        # 在左上角位置畫圓
-        cv2.circle(img, loc1, 5, (0, 255, 0), 2)
-        # 添加標籤
-        cv2.putText(img, f"{label1}:{score1:.2f}", 
-                   (loc1[0]-20, loc1[1]-10),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+    # # 判斷結果
+    # print(f"害蟲數字匹配結果：類別：{label1}，信心值：{score1:.2f}，位置：{loc1}")
+    # print(f"地塊編號匹配結果：類別：{label2}，信心值：{score2:.2f}，位置：{loc2}")
 
-    if loc2 is not None and score2 > 0.7:
-        # 在左上角位置畫圓
-        cv2.circle(img, loc2, 5, (255, 0, 0), 2)
-        # 添加標籤
-        cv2.putText(img, f"{label2}:{score2:.2f}", 
-                   (loc2[0]-20, loc2[1]-10),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
+    # # 在圖片上標記找到的位置（綠色是害蟲數字，藍色是地塊編號）
+    # if loc1 is not None and score1 > 0.7:
+    #     # 在左上角位置畫圓
+    #     cv2.circle(img, loc1, 5, (0, 255, 0), 2)
+    #     # 添加標籤
+    #     cv2.putText(img, f"{label1}:{score1:.2f}", 
+    #                (loc1[0]-20, loc1[1]-10),
+    #                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
 
-    print("\n=== 測試單一模板匹配 ===")
-    # 載入單一模板圖片
-    single_template = cv2.imread("./pic/pestnum/pest1.png")  # 使用害蟲數量 1 的圖片作為範例
-    location=None
-    score = 0
-    if single_template is not None:
-        # 單一模板比對
-        score, location = match_single_template(img, single_template)
-        print(f"單模板偵測結果：信心值：{score:.2f}，位置：{location}")
-    else:
-        print("無法載入單一模板圖片")
+    # if loc2 is not None and score2 > 0.7:
+    #     # 在左上角位置畫圓
+    #     cv2.circle(img, loc2, 5, (255, 0, 0), 2)
+    #     # 添加標籤
+    #     cv2.putText(img, f"{label2}:{score2:.2f}", 
+    #                (loc2[0]-20, loc2[1]-10),
+    #                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
 
-    # 在圖片上標記找到的位置
-    if loc1 is not None:
-        cv2.circle(img, loc1, 5, (0, 255, 0), 2)  # 用綠色圓圈標記多模板匹配位置
-    if location is not None and score > 0.7:  # 設定閾值 0.7
-        cv2.circle(img, location, 5, (0, 0, 255), 2)  # 用紅色圓圈標記單模板匹配位置
+    # print("\n=== 測試單一模板匹配 ===")
+    # # 載入單一模板圖片
+    # single_template = cv2.imread("./pic/whereami/vill.png") # 使用害蟲數量 1 的圖片作為範例
+    # location=None
+    # score = 0
+    # if single_template is not None:
+    #     # 單一模板比對
+    #     score, location = match_single_template(img, single_template)
+    #     print(f"單模板偵測結果：信心值：{score:.2f}，位置：{location}")
+    # else:
+    #     print("無法載入單一模板圖片")
 
-    # 顯示截圖
-    cv2.imshow("Captured Region", img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # # 在圖片上標記找到的位置
+    # # if loc1 is not None:
+    # #     cv2.circle(img, loc1, 5, (0, 255, 0), 2)  # 用綠色圓圈標記多模板匹配位置
+    # if location is not None and score > 0.7:  # 設定閾值 0.7
+    #     cv2.circle(img, location, 5, (0, 0, 255), 2)  # 用紅色圓圈標記單模板匹配位置
+
+    # # 顯示截圖
+    # cv2.imshow("Captured Region", img)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
