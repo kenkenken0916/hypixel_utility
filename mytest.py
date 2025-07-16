@@ -22,7 +22,7 @@ stop=threading.Event()
 cleaning_end = threading.Event()
 farming_end = threading.Event()
 error_count=0
-nopest=False
+nopest=True
 
 def color_check(r,g,b):
     bgr_color = np.array([[[b, g, r]]], dtype=np.uint8)
@@ -70,27 +70,43 @@ go_list= [[False for _ in range(5)] for _ in range(3)]
 def lookup():
     for i in range(10):
         tycode('/desk')
-        #todo fimd pic /desk.png break
-        if():
-            break
         time.sleep(2)
+        leaving=False
+        try:
+            loc= pyautogui.locateOnScreen('./pic/whereami/desk.png', confidence=0.8)
+            if loc:
+                leaving = True
+        except Exception as e:
+            print(f"[{get_time()}] Error locating desk image: {e}")
+            
+        if leaving:
+            break    
     else:
         print("not in desk")
         return False
     
     pyautogui.click(x=743, y=361)
     time.sleep(2)
+    global go_list
     for i in range (3):
         for o in range(5):
             go_list[i][o]=False
-            pyautogui.moveTo(x=819+72*i,y=353+72*o)
+            pyautogui.moveTo(x=819+72*o,y=353+72*i)
+            time.sleep(0.3)
             #todo find pic /plothas.png
-            if() :
-                go_list[i][o]=True
+            try:
+                loc= pyautogui.locateOnScreen('./pic/whereami/plothas.png', confidence=0.8)
+                if loc:
+                    go_list[i][o]=True
+            except Exception as e:
+                ...
     
     pyautogui.press('e')
+    print(go_list)
     return True
     
+
+
 
 def checking_farm():
     mytract.take_screenshot()
@@ -213,7 +229,7 @@ def func(delayhour=3, wait=False):
             thread1= threading.Thread(target=mepu)
             thread2= threading.Thread(target=pestout)
 
-            if n!=0 and not nopest:
+            if n!=0 and nopest:
                 print(f"[{get_time()}] cleaning")
                 cleaning_end.set()
                 thread2.start()
@@ -385,7 +401,8 @@ def pestout():
     pestnum=numMatch.pestingarden()
     if pestnum>5:
         print(f"[{get_time()}] pest number {pestnum} is too high, stopping")
-        nopest=True
+        global nopest
+        nopest=False
     
     print(f"[{get_time()}] clean")
     cleaning_end.clear()
