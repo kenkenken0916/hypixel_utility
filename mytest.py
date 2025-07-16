@@ -303,38 +303,44 @@ def mepu(loop=3):
         pyautogui.keyDown('w')
         for n in range(0,6):
             pyautogui.keyDown('a')
-            time.sleep(t)
+            time.sleep(2)
             #delay?
             
-            for p in range(12):
+            for p in range(25):
                 if stop.is_set():
                     pyautogui.keyUp('a')
+                    pyautogui.mouseUp(button='left',x=0,y=0)
+                    pyautogui.keyUp('w')
                     print(f"[{get_time()}] stop farming")
                     restartfarming(loop-i)
                     return
-                r,g,b=pyautogui.pixel(11, 766)
-                if color_check(r,g,b):
-                    break
-                r,g,b=pyautogui.pixel(291,947)
-                if color_check(r,g,b):
-                    break
+                if p>12:
+                    r,g,b=pyautogui.pixel(11, 766)
+                    if color_check(r,g,b):
+                        break
+                    r,g,b=pyautogui.pixel(291,947)
+                    if color_check(r,g,b):
+                        break
                 
                 time.sleep(5)
             
             pyautogui.keyUp('a')
             pyautogui.keyDown('d')
-            time.sleep(t)
+            time.sleep(2)
             #delay?
 
-            for p in range(12):
+            for p in range(25):
                 if stop.is_set():
-                    pyautogui.keyUp('a')
+                    pyautogui.keyUp('d')
+                    pyautogui.mouseUp(button='left',x=0,y=0)
+                    pyautogui.keyUp('w')
                     print(f"[{get_time()}] stop farming")
                     restartfarming(loop-i)
                     return
-                r,g,b=pyautogui.pixel(1909, 766)
-                if color_check(r,g,b) or n==5:
-                    break
+                if p>12:
+                    r,g,b=pyautogui.pixel(1909, 766)
+                    if color_check(r,g,b) or n==5:
+                        break
                 time.sleep(5)
             
             pyautogui.keyUp('d')
@@ -407,22 +413,61 @@ def pestout():
     print(f"[{get_time()}] clean")
     cleaning_end.clear()
 
-
+plotname=[[10,2,-1,3,11],[17,7,4,8,18],[20,]]# i will figure it uot
 
 def new_pestout():
     gohome()
     time.sleep(2)
-    pyautogui.press('4')
-    time.sleep(1)
     if(lookup()):
         print(f"[{get_time()}] cleaning")
     else:
         print(f"[{get_time()}] not in desk or no plot error")
         return
     
+    #todo layer 0 not builded
+
+    for i in range (5):
+        if go_list[1][i]:
+            print(f"[{get_time()}] cleaning layer 2 plot {i}")
+            pyautogui.keyDown('space')
+            time.sleep(10)
+            pyautogui.keyDown('a')
+            time.sleep(1)
+            pyautogui.keyUp('space')
+            pyautogui.keyUp('a')
+            pyautogui.press('5')
+            pyautogui.click(x=0,y=0)
+            pyautogui.press('4')
+            pyautogui.mouseDown(button='right',x=0,y=0)
+            pyautogui.keyDown('a')
+            time.sleep(i*2+10) # need some detail change
+            pyautogui.keyDown('w')
+            time.sleep(2)
+            pyautogui.keyUp('w')
+            pyautogui.keyUp('a')
+            pyautogui.mouseUp(button='right',x=0,y=0)
+            pestnum,plotnum=numMatch.pestinplot()
+            if pestnum>1 and plotnum==plotname[1][i]:
+                pyautogui.keyDown('w')
+                pyautogui.mouseDown(button='right',x=0,y=0)
+                for o in range(5):
+                    pyautogui.keyDown('d')
+                    time.sleep(1)
+                    pyautogui.keyUp('d')
+                    pyautogui.keyDown('a')
+                    time.sleep(1)
+                    pyautogui.keyUp('a')
+
+                pyautogui.keyDown('d')
+                time.sleep(1)
+                pyautogui.keyUp('d')
+
+                pyautogui.keyUp('w')
+                pyautogui.mouseUp(button='right',x=0,y=0)
+
     
-    #todo start from bottom layer use path goto entry and do small pestout
-    #then second layer some has faster way dont walt from the start
+    # todo start from bottom layer use path goto entry and do small pestout
+    # then second layer some has faster way dont walt from the start
     # if third layer has pest keep doinkg layer 3 and dont go to start and go there again
     #always go up left plot if has pest
  

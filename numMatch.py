@@ -77,6 +77,8 @@ def which_plot():
 
 pic_garden=cv2.imread("./pic/whereami/garden.png")
 pic_redgarden=cv2.imread("./pic/whereami/redgarden.png")
+pest_dict={"pest1":1,"pest2":2,"pest3":3,"pest4":4,"pest5":5,"pest6":6,"pest7":7,"pest8":8}
+plot_dict={"plot2":2,"plot3":3,"plot4":4,"plot7":7,"plot8":8,"plot10":10,"plot11":11,"plot12":12,"plot17":17,"plot18":18,"plot19":19,"plot20":20,"plot23":23,"plot24":24}
 
 def pestingarden() -> int:
     img = capture_region(1280, 0, 640, 800)
@@ -104,11 +106,8 @@ def pestingarden() -> int:
             pestlabel, pestscore,pestloc=match_template(new_img, templates_1to8)
             if pestlabel is not None and pestscore > 0.8:
                 print(f"害蟲數字匹配結果：類別：{pestlabel}，信心值：{pestscore:.2f}，位置：{pestloc}")
-                match = re.search(r'\d+',pestlabel)
-                number=-1
-                if match:
-                    number = int(match.group())
-                return number
+                
+                return pest_dict.get(pestlabel, -1)
             else:
                 print("未找到害蟲數字")
                 return -1
@@ -121,18 +120,18 @@ def pestingarden() -> int:
     else:
         print("未找到花園 or no pest")
         return -1
-    
 
-def pestinplot():
+
+def pestinplot()->tuple[int,int]:
     img = capture_region(1280, 0, 640, 800)
     if img is None:
         print("無法載入圖片")
-        return -2
+        return -2, -1
         
     
     lab, score, loc = match_template(img, templates_custom12)
 
-    if score > 0.8 and loc is not None:  # 確保 loc 不是 None
+    if score > 0.8 and loc is not None and lab is not None:  # 確保 loc 不是 None
         try:
             # 確保座標不會超出圖片範圍
             y_start = max(0, loc[1]-1)  # 不能小於 0
@@ -145,19 +144,20 @@ def pestinplot():
             pestlabel, pestscore,pestloc=match_template(new_img, templates_1to8)
             if pestlabel is not None and pestscore > 0.8:
                 print(f"害蟲數字匹配結果：類別：{pestlabel}，信心值：{pestscore:.2f}，位置：{pestloc}")
-                return pestlabel,lab
+                
+                return pest_dict.get(pestlabel, -1), plot_dict.get(lab, -1)
             else:
                 print("未找到害蟲數字")
-                return -1
+                return -1,-1
             
             
             
         except Exception as e:
             print(f"裁切圖片時發生錯誤：{e}")
-            return -3
+            return -3,-1
     else:
         print("未找到plot")
-        return -1
+        return -1,-1
 
 
 

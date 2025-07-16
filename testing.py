@@ -2,30 +2,25 @@ import pyautogui
 import time
 import numpy as np
 import cv2
+import numMatch
 
-# 目標座標
-x, y = 1909, 766
-time.sleep(8)
-# 取得 RGB 顏色
-r, g, b = pyautogui.pixel(x, y)
+plot_img=cv2.imread("./pic/whereami/plot.png")
+hypi_img=cv2.imread("./pic/whereami/hypi.png")
+vill_img=cv2.imread("./pic/whereami/vill.png")
+back_to_list_img=cv2.imread("./pic/whereami/back_to_list.png")
+redgarden_img=cv2.imread("./pic/whereami/redgarden.png")
+garden_img=cv2.imread("./pic/whereami/garden.png")
 
-# 構造正確型別：np.uint8(NumPy 陣列，形狀為 (1, 1, 3))
-bgr_color = np.array([[[b, g, r]]], dtype=np.uint8)
+def capture_region(x, y, width, height):
+    screenshot = pyautogui.screenshot(region=(x, y, width, height))
+    frame = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+    return frame
+while True:
+    screenshot = capture_region(0,0,1920,1080)
 
-# 轉 HSV
-hsv_color = cv2.cvtColor(bgr_color, cv2.COLOR_BGR2HSV)[0][0]
-
-print(f"Pixel at ({x},{y}) -> HSV: {hsv_color}")
-
-# 判斷是否為深紅色
-h, s, v = hsv_color
-is_deep_red = (
-    ((0 <= h <= 10) or (170 <= h <= 180)) and
-    s >= 100 and
-    v <= 150
-)
-
-if is_deep_red:
-    print("這是深紅色！")
-else:
-    print("這不是深紅色。")
+    score, loc=numMatch.match_single_template(screenshot, plot_img)
+    if score > 0.8:
+        print(f"Plot found with score: {score} at location: {loc}")
+    else:
+        print(f"Plot not found with score: {score}")
+    time.sleep(3)
