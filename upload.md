@@ -1,6 +1,60 @@
-# GitHub 使用指南
+# Hypixel Garden Utility
 
-## 日常更新
+This utility helps automate farming and pest control in Hypixel Skyblock's Garden.
+
+## Features
+
+- Automatic farming
+- Pest control
+- Command file based automation
+- Error handling and logging
+- Discord notifications
+
+## Setup and Usage
+
+1. Install required Python packages:
+
+```bash
+pip install pyautogui keyboard opencv-python numpy discord-webhook
+```
+
+1. Configure settings:
+
+- Edit `message.py` with your Discord webhook URL if you want notifications
+- Adjust screen coordinates in `mytest.py` if needed for your screen resolution
+
+### Command File Usage
+
+Create a `command.txt` file with commands to execute in sequence:
+
+```text
+func 2 true     # Run with 2 hour delay, wait=true
+pestout         # Run pest control
+mepu 3          # Run farming 3 loops
+```
+
+### Available Commands
+
+- `func [hours] [wait]`: Main farming function
+  - hours: Delay between cycles (default: 2)
+  - wait: Whether to wait before starting (default: false)
+- `pestout`: Run pest control routine
+- `oldpestout`: Run legacy pest control routine
+- `mepu [loops]`: Run farming routine
+  - loops: Number of farming cycles (default: 3)
+
+### Hotkeys
+
+- `u+i`: Start main farming function
+- `esc`: Exit program
+
+### Error Handling
+
+- Errors are logged to `error/error.log`
+- Screenshots are saved as `error_YYYYMMDD_HHMMSS.png`
+- Discord notifications sent on critical errors (if configured)
+
+## Git Instructions
 
 1. **检查状态**:
 

@@ -68,7 +68,7 @@ def which_plot():
     # 指定區域（例如左上角 400x300 的範圍）
     img=capture_region(1280, 0, 640, 800)
     plotlabel, plotscore, plotloc= match_template(img, templates_custom12)
-    if plotlabel is not None and plotscore > 0.8:
+    if plotlabel is not None and plotscore > 0.7:
         print(f"地塊編號匹配結果：類別：{plotlabel}，信心值：{plotscore:.2f}，位置：{plotloc}")
         return plotlabel, plotscore, plotloc
     else:
@@ -104,7 +104,7 @@ def pestingarden() -> int:
             # 裁切圖片
             new_img = img[y_start:y_end, x_start:x_end]
             pestlabel, pestscore,pestloc=match_template(new_img, templates_1to8)
-            if pestlabel is not None and pestscore > 0.8:
+            if pestlabel is not None and pestscore > 0.7:
                 print(f"害蟲數字匹配結果：類別：{pestlabel}，信心值：{pestscore:.2f}，位置：{pestloc}")
                 
                 return pest_dict.get(pestlabel, -1)
@@ -142,21 +142,21 @@ def pestinplot()->tuple[int,int]:
             # 裁切圖片
             new_img = img[y_start:y_end, x_start:x_end]
             pestlabel, pestscore,pestloc=match_template(new_img, templates_1to8)
-            if pestlabel is not None and pestscore > 0.8:
-                print(f"害蟲數字匹配結果：類別：{pestlabel}，信心值：{pestscore:.2f}，位置：{pestloc}")
+            if pestlabel is not None and pestscore > 0.7:
+                print(f"害蟲數字匹配結果：類別：{pestlabel}，信心值：{pestscore:.2f}，位置：{pestloc}, 地塊編號：{lab}")
                 
                 return pest_dict.get(pestlabel, -1), plot_dict.get(lab, -1)
             else:
                 print("未找到害蟲數字")
-                return -1,-1
+                return -1,plot_dict.get(lab, -1)
             
             
             
         except Exception as e:
             print(f"裁切圖片時發生錯誤：{e}")
-            return -3,-1
+            return -3,plot_dict.get(lab, -1)
     else:
-        print("未找到plot")
+        print(f"未找到plot score: {score}, loc: {loc}, lab: {lab}")
         return -1,-1
 
 

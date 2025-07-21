@@ -12,8 +12,36 @@ import mytract
 import freez
 import numMatch
 import re
+import traceback
 # import discord_webhook
 # import message
+
+def handle_error(error_msg):
+    """
+    错误管理函数：记录错误信息和截图
+    :param error_msg: 错误信息
+    :param take_screenshot: 是否需要截图
+    """
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    # 确保错误目录存在
+    if not os.path.exists("./error"):
+        os.makedirs("./error")
+    
+    # 记录错误信息到日志
+    with open("./error/error.log", "a", encoding='utf-8') as f:
+        f.write(f"\n[{get_time()}] {'='*50}\n")
+        f.write(f"Error Message: {error_msg}\n")
+        if isinstance(error_msg, Exception):
+            f.write(f"Traceback:\n{traceback.format_exc()}\n")
+    
+    # 如果需要，保存截图
+    try:
+        screenshot = pyautogui.screenshot()
+        screenshot.save(f"./error/error_{timestamp}.png")
+    except Exception as e:
+        with open("./error/error.log", "a", encoding='utf-8') as f:
+            f.write(f"Screenshot Error: {str(e)}\n")
 
 def get_time():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -23,6 +51,8 @@ cleaning_end = threading.Event()
 farming_end = threading.Event()
 error_count=0
 nopest=True
+checkable=threading.Event()
+checkable.set()
 
 def color_check(r,g,b):
     bgr_color = np.array([[[b, g, r]]], dtype=np.uint8)
@@ -43,6 +73,7 @@ def tycode(str):
     pyautogui.keyUp('t')
     pyautogui.keyUp('shiftleft')
     pyautogui.mouseUp(button='left',x=0,y=0)
+    pyautogui.mouseUp(button='right',x=0,y=0)
     time.sleep(.5)
     pyautogui.press('t')
     pyautogui.press('backspace')
@@ -64,12 +95,15 @@ def gohome():
     pyautogui.write("/warp garden")
     time.sleep(1)
     pyautogui.press('enter')
+    
 
 go_list= [[False for _ in range(5)] for _ in range(3)]
 
 def lookup():
+    checkable.clear()
     for i in range(10):
         tycode('/desk')
+
         time.sleep(2)
         leaving=False
         try:
@@ -78,11 +112,13 @@ def lookup():
                 leaving = True
         except Exception as e:
             print(f"[{get_time()}] Error locating desk image: {e}")
+            handle_error(f"Error locating desk image: {e}")
             
         if leaving:
             break    
     else:
         print("not in desk")
+        checkable.set()
         return False
     
     pyautogui.click(x=743, y=361)
@@ -103,15 +139,18 @@ def lookup():
     
     pyautogui.press('e')
     print(go_list)
+    checkable.set()
     return True
     
 
 
 
 def checking_farm():
+    if not checkable.is_set():
+        print("waiting for checking")
+        return
     mytract.take_screenshot()
-    result=mytract.search_plot()
-
+    result=mytract.search_plot() 
     if not result:
         time.sleep(5)
         mytract.take_screenshot()
@@ -175,10 +214,14 @@ def linking():
         else:
             global error_count
             error_count+=1
-            print(f"[{get_time()}] not in hypixel or back to list need help or waiting")
+            error_msg = f"Not in hypixel or back to list, need help or waiting. Error count: {error_count}"
+            handle_error(error_msg)
+            print(f"[{get_time()}] {error_msg}")
             # message.send_discord_message()
             if error_count>5:
-                print(f"[{get_time()}] too many errors, stopping")
+                critical_error = f"Too many errors ({error_count}), shutting down system"
+                handle_error(critical_error)
+                print(f"[{get_time()}] {critical_error}")
                 pyautogui.press('esc')
                 pyautogui.click(x=950,y=550)
                 pyautogui.click(x=950,y=550)
@@ -207,7 +250,7 @@ def freez_and_wait(loop):#10min for 1 loop
     freez.unfreeze(freez.find_minecraft_pid())
 
 
-def func(delayhour=3, wait=False):
+def func(delayhour=2, wait=False):
     delaytime = delayhour* 6
     if wait:
         freez_and_wait(delaytime)
@@ -221,30 +264,44 @@ def func(delayhour=3, wait=False):
         time.sleep(10)
         #checking
 
-    for i in range (0,5):
+    for i in range (0,10):
         checking_farm()
         error_count=0
         print('runing'+str(i))
         for n in range(4):
-            thread1= threading.Thread(target=mepu)
-            thread2= threading.Thread(target=pestout)
 
-            if n!=0 and nopest:
-                print(f"[{get_time()}] cleaning")
+            if nopest:# and n!=0:
+                thread2= threading.Thread(target=pestout)
+                print(f"[{get_time()}] cleaning1")
                 cleaning_end.set()
                 thread2.start()
-                while cleaning_end.is_set():
-                    time.sleep(10)
-                    checking_farm()
+                time.sleep(10)
+                # while cleaning_end.is_set():
+                #     time.sleep(10)
+                #     checking_farm()
 
-                print(f"[{get_time()}] cleaning end")
+                print(f"[{get_time()}] cleaning1 end")
                 thread2.join()
                 cleaning_end.clear()
 
+                thread2= threading.Thread(target=pestout)
+                print(f"[{get_time()}] cleaning2")
+                cleaning_end.set()
+                thread2.start()
+                time.sleep(10)
+                # while cleaning_end.is_set():
+                #     time.sleep(10)
+                #     checking_farm()
+
+                print(f"[{get_time()}] cleaning2 end")
+                thread2.join()
+                cleaning_end.clear()
+
+            thread1= threading.Thread(target=mepu)
             print(f"[{get_time()}] farming")
             farming_end.set()
             thread1.start()
-
+            time.sleep(10)
             while farming_end.is_set():
                 time.sleep(10)
                 checking_farm()
@@ -280,9 +337,11 @@ def func(delayhour=3, wait=False):
 
 
 def restartfarming(loop):
-    print(f"[{get_time()}] restart farming")
+    
     while stop.is_set():
         time.sleep(10)
+        
+    print(f"[{get_time()}] restart farming")
     mepu(loop)
     
         
@@ -297,7 +356,9 @@ def mepu(loop=3):
     pyautogui.keyUp('shiftleft')
     for i in range (loop):
         print('m'+str(i))
+        checkable.clear()
         gohome()
+        checkable.set()
         time.sleep(.5)
         pyautogui.mouseDown(button='left',x=0,y=0)
         pyautogui.keyDown('w')
@@ -349,8 +410,7 @@ def mepu(loop=3):
     pyautogui.mouseUp(button='left',x=0,y=0)
     farming_end.clear()
 
-
-def pestout():
+def oldpestout():
     gohome()
     time.sleep(2)
     pyautogui.press('4')
@@ -404,19 +464,21 @@ def pestout():
             cleaning_end.clear()
             return
     
-    pestnum=numMatch.pestingarden()
-    if pestnum>5:
-        print(f"[{get_time()}] pest number {pestnum} is too high, stopping")
-        global nopest
-        nopest=False
-    
     print(f"[{get_time()}] clean")
     cleaning_end.clear()
 
-plotname=[[10,2,-1,3,11],[17,7,4,8,18],[20,]]# i will figure it uot
+def restartpest():
+    while stop.is_set():
+        time.sleep(10)
+    print(f"[{get_time()}] restart pest")
+    pestout()
 
-def new_pestout():
+plotname=[[10,2,-1,3,11],[17,7,4,8,18],[23,19,12,20,24]]
+
+def pestout():
+    checkable.clear()
     gohome()
+    checkable.set()
     time.sleep(2)
     if(lookup()):
         print(f"[{get_time()}] cleaning")
@@ -424,55 +486,561 @@ def new_pestout():
         print(f"[{get_time()}] not in desk or no plot error")
         return
     
-    #todo layer 0 not builded
+    for i in range (5):
+        if go_list[0][i]:
+            print(f"[{get_time()}] cleaning layer 1 plot {i}")
+            checkable.clear()
+            gohome()
+            checkable.set()
+            pyautogui.keyDown('space')
+            time.sleep(6)
+            pyautogui.keyDown('s')
+            time.sleep(1)
+            pyautogui.keyUp('space')
+            pyautogui.keyUp('s')
+            pyautogui.press('5')
+            time.sleep(0.5)
+            pyautogui.click(x=0,y=0)
+            pyautogui.click(x=0,y=0)
+            time.sleep(1)
+            pyautogui.press('4')
+            pyautogui.mouseDown(button='right',x=0,y=0)
+
+            if stop.is_set():
+                print(f"[{get_time()}] stop cleaning")
+                restartpest()
+                cleaning_end.clear()
+                return
+                
+            pyautogui.keyDown('s')
+            time.sleep(6)
+            pyautogui.keyUp('s')
+
+            pyautogui.keyDown('a')
+            time.sleep(3.6)
+            for o in range(0,i):
+                time.sleep(5.6)
+                if stop.is_set():
+                    print(f"[{get_time()}] stop cleaning")
+                    restartpest()
+                    cleaning_end.clear()
+                    return
+                
+            pyautogui.click(button='left',x=0,y=0)
+            pyautogui.keyDown('w')
+            time.sleep(3)
+            pyautogui.keyUp('w')
+            pyautogui.keyUp('a')
+            pyautogui.mouseUp(button='right',x=0,y=0)
+            pestnum,plotnum=numMatch.pestinplot()
+            if pestnum<1 or plotnum!=plotname[0][i]:
+                error_msg = f"Plot mismatch error: Expected plot {plotname[0][i]}, found plot {plotnum}"
+                handle_error(error_msg)
+                print(f"[{get_time()}] {error_msg}")
+            pyautogui.click(button='right',x=0,y=0)
+            pyautogui.keyDown('w')
+            
+            for o in range(5):
+                pyautogui.click(button='left',x=0,y=0)
+                pyautogui.mouseDown(button='right',x=0,y=0)
+                pyautogui.keyDown('d')
+                time.sleep(8)
+                pyautogui.keyUp('d')
+
+                if stop.is_set():
+                    print(f"[{get_time()}] stop cleaning")
+                    restartpest()
+                    cleaning_end.clear()
+                    return
+                pyautogui.mouseUp(button='right',x=0,y=0)
+                pyautogui.click(button='left',x=0,y=0)
+                pyautogui.mouseDown(button='right',x=0,y=0)
+                pyautogui.keyDown('a')
+                time.sleep(8)
+                pyautogui.keyUp('a')
+                if stop.is_set():
+                    print(f"[{get_time()}] stop cleaning")
+                    restartpest()
+                    cleaning_end.clear()
+                    return
+                pyautogui.mouseUp(button='right',x=0,y=0)
+            
+            pyautogui.click(button='left',x=0,y=0)
+
+            pyautogui.mouseDown(button='right',x=0,y=0)
+            pyautogui.keyDown('d')
+            time.sleep(8)
+            pyautogui.keyUp('d')
+
+            pyautogui.keyUp('w')
+            pyautogui.mouseUp(button='right',x=0,y=0)
+            
+            if stop.is_set():
+                print(f"[{get_time()}] stop cleaning")
+                restartpest()
+                cleaning_end.clear()
+                return
+            
+            #keep on higher layer
+            for o in range(i,5):
+                if go_list[1][o]:
+                    print(f"[{get_time()}] cleaning layer 2 plot {o}")
+                    pyautogui.mouseDown(button='right',x=0,y=0)
+                    pyautogui.keyDown('a')
+                    time.sleep(3.6)
+                    for u in range(0,o-i):
+                        time.sleep(5.6)
+                        if stop.is_set():
+                            print(f"[{get_time()}] stop cleaning")
+                            restartpest()
+                            cleaning_end.clear()
+                            return
+                        
+                    pyautogui.click(button='left',x=0,y=0)    
+                    pyautogui.keyDown('w')
+                    time.sleep(3)
+                    pyautogui.keyUp('w')
+                    pyautogui.keyUp('a')
+                    pyautogui.mouseUp(button='right',x=0,y=0)
+                    pestnum,plotnum=numMatch.pestinplot()
+                    if pestnum<1 or plotnum!=plotname[1][o]:
+                        print(f"sth went wrong, plot{plotname[1][o]} didnt match found plot:{plotnum}")
+                    pyautogui.click(button='right',x=0,y=0)
+                    pyautogui.keyDown('w')
+                    
+                    for u in range(5):
+                        pyautogui.click(button='left',x=0,y=0)
+                        pyautogui.mouseDown(button='right',x=0,y=0)
+                        pyautogui.keyDown('d')
+                        time.sleep(8)
+                        pyautogui.keyUp('d')
+
+                        if stop.is_set():
+                            print(f"[{get_time()}] stop cleaning")
+                            restartpest()
+                            cleaning_end.clear()
+                            return
+                        pyautogui.mouseUp(button='right',x=0,y=0)
+                        pyautogui.click(button='left',x=0,y=0)
+                        pyautogui.mouseDown(button='right',x=0,y=0)
+                        pyautogui.keyDown('a')
+                        time.sleep(8)
+                        pyautogui.keyUp('a')
+                        if stop.is_set():
+                            print(f"[{get_time()}] stop cleaning")
+                            restartpest()
+                            cleaning_end.clear()
+                            return
+                        pyautogui.mouseUp(button='right',x=0,y=0)
+                    
+                    pyautogui.click(button='left',x=0,y=0)
+
+                    pyautogui.mouseDown(button='right',x=0,y=0)
+                    pyautogui.keyDown('d')
+                    time.sleep(8)
+                    pyautogui.keyUp('d')
+
+                    pyautogui.keyUp('w')
+                    pyautogui.mouseUp(button='right',x=0,y=0)
+                    
+                    if stop.is_set():
+                        print(f"[{get_time()}] stop cleaning")
+                        restartpest()
+                        cleaning_end.clear()
+                        return
+                    go_list[1][o]=False
+
+                    for p in range(o,5):
+                        if go_list[2][p]:
+                            print(f"[{get_time()}] cleaning layer 3 plot {p}")
+                            pyautogui.mouseDown(button='right',x=0,y=0)
+                            pyautogui.keyDown('a')
+                            time.sleep(3.6)
+                            for u in range(0,p-o):
+                                time.sleep(5.6)
+                                if stop.is_set():
+                                    print(f"[{get_time()}] stop cleaning")
+                                    restartpest()
+                                    cleaning_end.clear()
+                                    return
+                                
+                            pyautogui.click(button='left',x=0,y=0)
+                            pyautogui.keyDown('w')
+                            time.sleep(3)
+                            pyautogui.keyUp('w')
+                            pyautogui.keyUp('a')
+                            pyautogui.mouseUp(button='right',x=0,y=0)
+                            pestnum,plotnum=numMatch.pestinplot()
+                            if pestnum<1 or plotnum!=plotname[2][p]:
+                                print(f"sth went wrong, plot{plotname[2][p]} didnt match found plot:{plotnum}")
+                            pyautogui.click(button='right',x=0,y=0)
+                            pyautogui.keyDown('w')
+                            
+                            for o in range(5):
+                                pyautogui.click(button='left',x=0,y=0)
+                                pyautogui.mouseDown(button='right',x=0,y=0)
+                                pyautogui.keyDown('d')
+                                time.sleep(8)
+                                pyautogui.keyUp('d')
+
+                                if stop.is_set():
+                                    print(f"[{get_time()}] stop cleaning")
+                                    restartpest()
+                                    cleaning_end.clear()
+                                    return
+                                pyautogui.mouseUp(button='right',x=0,y=0)
+                                pyautogui.click(button='left',x=0,y=0)
+                                pyautogui.mouseDown(button='right',x=0,y=0)
+                                pyautogui.keyDown('a')
+                                time.sleep(8)
+                                pyautogui.keyUp('a')
+                                if stop.is_set():
+                                    print(f"[{get_time()}] stop cleaning")
+                                    restartpest()
+                                    cleaning_end.clear()
+                                    return
+                                pyautogui.mouseUp(button='right',x=0,y=0)
+                            
+                            pyautogui.click(button='left',x=0,y=0)
+
+                            pyautogui.mouseDown(button='right',x=0,y=0)
+                            pyautogui.keyDown('d')
+                            time.sleep(8)
+                            pyautogui.keyUp('d')
+
+                            pyautogui.keyUp('w')
+                            pyautogui.mouseUp(button='right',x=0,y=0)
+                            
+                            if stop.is_set():
+                                print(f"[{get_time()}] stop cleaning")
+                                restartpest()
+                                cleaning_end.clear()
+                                return
+                            go_list[2][p]=False
+                            break
+                    
+                    break
+
 
     for i in range (5):
         if go_list[1][i]:
             print(f"[{get_time()}] cleaning layer 2 plot {i}")
+            checkable.clear()
+            gohome()
+            checkable.set()
             pyautogui.keyDown('space')
-            time.sleep(10)
+            time.sleep(6)
             pyautogui.keyDown('a')
             time.sleep(1)
             pyautogui.keyUp('space')
             pyautogui.keyUp('a')
             pyautogui.press('5')
+            time.sleep(0.5)
             pyautogui.click(x=0,y=0)
+            pyautogui.click(x=0,y=0)
+            time.sleep(1)
             pyautogui.press('4')
             pyautogui.mouseDown(button='right',x=0,y=0)
             pyautogui.keyDown('a')
-            time.sleep(i*2+10) # need some detail change
+            time.sleep(3.6)
+            for o in range(0,i):
+                time.sleep(5.6)
+                if stop.is_set():
+                    print(f"[{get_time()}] stop cleaning")
+                    restartpest()
+                    cleaning_end.clear()
+                    return
+            
+            pyautogui.click(button='left',x=0,y=0)
             pyautogui.keyDown('w')
-            time.sleep(2)
+            time.sleep(3)
             pyautogui.keyUp('w')
             pyautogui.keyUp('a')
             pyautogui.mouseUp(button='right',x=0,y=0)
             pestnum,plotnum=numMatch.pestinplot()
-            if pestnum>1 and plotnum==plotname[1][i]:
-                pyautogui.keyDown('w')
+            if pestnum<1 or plotnum!=plotname[1][i]:
+                error_msg = f"Plot mismatch error: Expected plot {plotname[1][i]}, found plot {plotnum}"
+                handle_error(error_msg)
+                print(f"[{get_time()}] {error_msg}")
+            pyautogui.click(button='right',x=0,y=0)
+            pyautogui.keyDown('w')
+            
+            for o in range(5):
+                pyautogui.click(button='left',x=0,y=0)
                 pyautogui.mouseDown(button='right',x=0,y=0)
-                for o in range(5):
-                    pyautogui.keyDown('d')
-                    time.sleep(1)
-                    pyautogui.keyUp('d')
-                    pyautogui.keyDown('a')
-                    time.sleep(1)
-                    pyautogui.keyUp('a')
-
                 pyautogui.keyDown('d')
-                time.sleep(1)
+                time.sleep(8)
                 pyautogui.keyUp('d')
 
-                pyautogui.keyUp('w')
+                if stop.is_set():
+                    print(f"[{get_time()}] stop cleaning")
+                    restartpest()
+                    cleaning_end.clear()
+                    return
                 pyautogui.mouseUp(button='right',x=0,y=0)
+                pyautogui.click(button='left',x=0,y=0)
+                pyautogui.mouseDown(button='right',x=0,y=0)
+                pyautogui.keyDown('a')
+                time.sleep(8)
+                pyautogui.keyUp('a')
+                if stop.is_set():
+                    print(f"[{get_time()}] stop cleaning")
+                    restartpest()
+                    cleaning_end.clear()
+                    return
+                pyautogui.mouseUp(button='right',x=0,y=0)
+            
+            pyautogui.click(button='left',x=0,y=0)
 
+            pyautogui.mouseDown(button='right',x=0,y=0)
+            pyautogui.keyDown('d')
+            time.sleep(8)
+            pyautogui.keyUp('d')
+
+            pyautogui.keyUp('w')
+            pyautogui.mouseUp(button='right',x=0,y=0)
+            
+            if stop.is_set():
+                print(f"[{get_time()}] stop cleaning")
+                restartpest()
+                cleaning_end.clear()
+                return
+            
+            #keep on higher layer
+            for o in range(i,5):
+                if go_list[2][o]:
+                    print(f"[{get_time()}] cleaning layer 3 plot {o}")
+                    pyautogui.mouseDown(button='right',x=0,y=0)
+                    pyautogui.keyDown('a')
+                    time.sleep(3.6)
+                    for u in range(0,o-i):
+                        time.sleep(5.6)
+                        if stop.is_set():
+                            print(f"[{get_time()}] stop cleaning")
+                            restartpest()
+                            cleaning_end.clear()
+                            return
+                    
+                    pyautogui.click(button='left',x=0,y=0)
+                    pyautogui.keyDown('w')
+                    time.sleep(3)
+                    pyautogui.keyUp('w')
+                    pyautogui.keyUp('a')
+                    pyautogui.mouseUp(button='right',x=0,y=0)
+                    pestnum,plotnum=numMatch.pestinplot()
+                    if pestnum<1 or plotnum!=plotname[2][o]:
+                        print(f"sth went wrong, plot{plotname[2][o]} didnt match found plot:{plotnum}")
+                    pyautogui.click(button='right',x=0,y=0)
+                    pyautogui.keyDown('w')
+                    
+                    for u in range(5):
+                        pyautogui.click(button='left',x=0,y=0)
+                        pyautogui.mouseDown(button='right',x=0,y=0)
+                        pyautogui.keyDown('d')
+                        time.sleep(8)
+                        pyautogui.keyUp('d')
+
+                        if stop.is_set():
+                            print(f"[{get_time()}] stop cleaning")
+                            restartpest()
+                            cleaning_end.clear()
+                            return
+                        pyautogui.mouseUp(button='right',x=0,y=0)
+                        pyautogui.click(button='left',x=0,y=0)
+                        pyautogui.mouseDown(button='right',x=0,y=0)
+                        pyautogui.keyDown('a')
+                        time.sleep(8)
+                        pyautogui.keyUp('a')
+                        if stop.is_set():
+                            print(f"[{get_time()}] stop cleaning")
+                            restartpest()
+                            cleaning_end.clear()
+                            return
+                        pyautogui.mouseUp(button='right',x=0,y=0)
+                    
+                    pyautogui.click(button='left',x=0,y=0)
+
+                    pyautogui.mouseDown(button='right',x=0,y=0)
+                    pyautogui.keyDown('d')
+                    time.sleep(8)
+                    pyautogui.keyUp('d')
+
+                    pyautogui.keyUp('w')
+                    pyautogui.mouseUp(button='right',x=0,y=0)
+                    
+                    if stop.is_set():
+                        print(f"[{get_time()}] stop cleaning")
+                        restartpest()
+                        cleaning_end.clear()
+                        return
+                    go_list[2][o]=False
+                    break
+                
+    for i in range (5):
+        if go_list[2][i]:
+            print(f"[{get_time()}] cleaning layer 3 plot {i}")
+            checkable.clear()
+            gohome()
+            checkable.set()
+            pyautogui.keyDown('space')
+            time.sleep(6)
+            pyautogui.keyDown('w')
+            time.sleep(1)
+            pyautogui.keyUp('space')
+            pyautogui.keyUp('w')
+            pyautogui.press('5')
+            time.sleep(0.5)
+            pyautogui.click(x=0,y=0)
+            pyautogui.click(x=0,y=0)
+            time.sleep(1)
+            pyautogui.press('4')
+            pyautogui.mouseDown(button='right',x=0,y=0)
+
+            if stop.is_set():
+                print(f"[{get_time()}] stop cleaning")
+                restartpest()
+                cleaning_end.clear()
+                return
+             
+            pyautogui.keyDown('w')
+            time.sleep(6)
+            pyautogui.keyUp('w')
+
+            pyautogui.keyDown('a')
+            time.sleep(3.6)
+            for o in range(0,i):
+                time.sleep(5.6)
+                if stop.is_set():
+                    print(f"[{get_time()}] stop cleaning")
+                    restartpest()
+                    cleaning_end.clear()
+                    return
+            
+            pyautogui.click(button='left',x=0,y=0)
+            pyautogui.keyDown('w')
+            time.sleep(3)
+            pyautogui.keyUp('w')
+            pyautogui.keyUp('a')
+            pyautogui.mouseUp(button='right',x=0,y=0)
+            pestnum,plotnum=numMatch.pestinplot()
+            if pestnum<1 and plotnum!=plotname[2][i]:
+                print(f"sth went wrong, plot{plotname[2][i]} didnt match found plot:{plotnum}")
+            pyautogui.click(button='right',x=0,y=0)
+            pyautogui.keyDown('w')
+            
+            for o in range(5):
+                pyautogui.click(button='left',x=0,y=0)
+                pyautogui.mouseDown(button='right',x=0,y=0)
+                pyautogui.keyDown('d')
+                time.sleep(8)
+                pyautogui.keyUp('d')
+
+                if stop.is_set():
+                    print(f"[{get_time()}] stop cleaning")
+                    restartpest()
+                    cleaning_end.clear()
+                    return
+                pyautogui.mouseUp(button='right',x=0,y=0)
+                pyautogui.click(button='left',x=0,y=0)
+                pyautogui.mouseDown(button='right',x=0,y=0)
+                pyautogui.keyDown('a')
+                time.sleep(8)
+                pyautogui.keyUp('a')
+                if stop.is_set():
+                    print(f"[{get_time()}] stop cleaning")
+                    restartpest()
+                    cleaning_end.clear()
+                    return
+                pyautogui.mouseUp(button='right',x=0,y=0)
+            
+            pyautogui.click(button='left',x=0,y=0)
+
+            pyautogui.mouseDown(button='right',x=0,y=0)
+            pyautogui.keyDown('d')
+            time.sleep(8)
+            pyautogui.keyUp('d')
+
+            pyautogui.keyUp('w')
+            pyautogui.mouseUp(button='right',x=0,y=0)
+            
+            if stop.is_set():
+                print(f"[{get_time()}] stop cleaning")
+                restartpest()
+                cleaning_end.clear()
+                return
     
-    # todo start from bottom layer use path goto entry and do small pestout
-    # then second layer some has faster way dont walt from the start
-    # if third layer has pest keep doinkg layer 3 and dont go to start and go there again
-    #always go up left plot if has pest
- 
+    num=numMatch.pestingarden()
+    print(f"[{get_time()}] cleaning end found {num} pest left")
+    cleaning_end.clear()
+    
+    
 
+def execute_command(command):
+    """
+    执行指定的命令
+    :param command: 要执行的命令名称
+    """
+    command = command.strip()  # 移除多余空格
+    if not command:  # 跳过空行
+        return
+    
+    try:
+        if command == 'func':
+            func()
+        elif command.startswith('func '):
+            # 解析参数，例如 "func 2 true" -> func(2, True)
+            args = command.split()[1:]
+            if len(args) >= 1:
+                delayhour = int(args[0])
+                wait = bool(args[1].lower() == 'true') if len(args) > 1 else False
+                func(delayhour, wait)
+            else:
+                func()
+        elif command == 'oldpestout':
+            oldpestout()
+        elif command == 'pestout':
+            pestout()
+        elif command.startswith('mepu '):
+            # 解析参数，例如 "mepu 3" -> mepu(3)
+            loop = int(command.split()[1])
+            mepu(loop)
+        elif command == 'mepu':
+            mepu()
+        else:
+            print(f"[{get_time()}] Unknown command: {command}")
+            handle_error(f"Unknown command: {command}")
+    except Exception as e:
+        print(f"[{get_time()}] Error executing command {command}: {str(e)}")
+        handle_error(e)
+
+def run_command_file():
+    """
+    从 command.txt 读取并执行命令
+    文件格式：每行一个命令
+    例如：
+    func 2 true
+    pestout
+    mepu 3
+    """
+    try:
+        with open('command.txt', 'r', encoding='utf-8') as f:
+            commands = f.readlines()
+        
+        print(f"[{get_time()}] Found {len(commands)} commands")
+        
+        for i, command in enumerate(commands, 1):
+            print(f"[{get_time()}] Executing command {i}/{len(commands)}: {command.strip()}")
+            execute_command(command)
+            
+        print(f"[{get_time()}] All commands executed")
+        
+    except FileNotFoundError:
+        print(f"[{get_time()}] command.txt not found")
+        handle_error("command.txt not found")
+    except Exception as e:
+        print(f"[{get_time()}] Error reading command file: {str(e)}")
+        handle_error(e)
 
 # Set up the hotkeys
-keyboard.add_hotkey('u+i',func)#func2
+keyboard.add_hotkey('u+i',func)  # func2
 keyboard.wait('esc')

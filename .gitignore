@@ -18,3 +18,7 @@ env/
 
 # OS
 .DS_Store
+
+# Project specific
+message.py
+error/
